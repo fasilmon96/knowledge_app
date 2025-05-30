@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
+import 'package:knowledge_app/totalscore.dart';
 import 'package:knowledge_app/pallete.dart';
 import 'package:knowledge_app/providers.dart';
 
@@ -15,27 +16,44 @@ class _HomeState extends ConsumerState<Home> {
   void optionColorChange(index) {
     ref.read(changeColorProvider).optionChange(index);
   }
-  void resetData(){
+  void resetColorData(){
     ref.read(changeColorProvider).reset();
   }
+  void startCountDown(int length){
+    ref.read(countdownProvider.notifier).startCountdown(context,length);
+  }//statenotier and stateprovide itinokke notifier venam vilikkan
+    //chnageNotifier atu venda
+  void timeCancel(){
+    ref.read(countdownProvider.notifier).cancel();
+  }
+  void incrementScore(){
+    ref.read(scoreProvider.notifier).incrementScore();
+  }
 
+  @override
+  void initState() {
+    startCountDown(0);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(questionIndexNotifierProvider);
     final changeIndex = ref.watch(questionIndexNotifierProvider.notifier);
     final questionAsync = ref.watch(questionProvider);
     final changeColor = ref.watch(changeColorProvider).index;
+    final countDown = ref.watch(countdownProvider);
+    final answerLength = ref.watch(scoreProvider);
     return questionAsync.when(
       data: (data) {
-        final List allData = data["questions"];
+        final List allData = data["questionData"]["questions"];
         final question = allData[currentIndex]["question"];
-        final List option = allData[currentIndex]["option"];
-        final answer = allData[currentIndex]["answer"];
+        final List option = allData[currentIndex]["options"];
+        final String answer = allData[currentIndex]["answer"];
         return Scaffold(
           body: Container(
             padding: EdgeInsets.symmetric(
               horizontal: 10,
-            ).copyWith(top: MediaQuery.of(context).size.width / 1.6),
+            ).copyWith(top: MediaQuery.of(context).size.width /2.6),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Pallete.message, Pallete.message6],
@@ -45,6 +63,21 @@ class _HomeState extends ConsumerState<Home> {
             ),
             child: Column(
               children: [
+             AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            transitionBuilder: (child, animation) {
+              return ScaleTransition(scale: animation, child: child);
+            },
+            child: Text(
+              "$countDown",
+              key: ValueKey(countDown),
+              style: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+                SizedBox(height: 120,),
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(10),
@@ -79,20 +112,27 @@ class _HomeState extends ConsumerState<Home> {
                     return GestureDetector(
                       onTap: () async {
                         optionColorChange(index);
+                        timeCancel();
                         if (option[index] == answer) {
+                          incrementScore();
                           await Future.delayed(Duration(seconds: 1));
-                          if (currentIndex < 4 - 1) {
-                            resetData();
-                            changeIndex.showNextQuestion(4); //
-                      // move to next question
+                          if (currentIndex <allData.length-1) {
+                            resetColorData();
+                            startCountDown(answerLength+1);
+                            changeIndex.showNextQuestion(allData.length);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('All questions completed!')),
                             );
-                            changeIndex.resetData();
-                            resetData();
+                            await Future.delayed(Duration(seconds: 2));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => TotalScore(totalScore: allData.length,),));
                           }
-
+                        }else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('wrong answer pls try again next')),
+                          );
+                          await Future.delayed(Duration(seconds: 2));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => TotalScore(totalScore: answerLength),),);
                         }
                       },
 
@@ -101,11 +141,11 @@ class _HomeState extends ConsumerState<Home> {
                         padding: EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
                           color:
-                              changeColor == index
-                                  ? option[index]==answer
-                                      ? Colors.green
-                                      : Colors.red
-                                  : Pallete.prod.withAlpha(1),
+                          changeColor == index
+                              ? option[index]==answer
+                              ? Colors.green
+                              : Colors.red
+                              : Pallete.prod.withAlpha(1),
                           border: GradientBoxBorder(
                             gradient: LinearGradient(
                               colors: [Pallete.prod, Pallete.message5],
@@ -124,7 +164,6 @@ class _HomeState extends ConsumerState<Home> {
                     );
                   },
                 ),
-                Spacer(),
               ],
             ),
           ),

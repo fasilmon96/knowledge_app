@@ -37,6 +37,7 @@ dependencies:
   gradient_borders: ^1.0.1
   flutter_riverpod: ^2.6.1
   http: ^1.4.0
+  animated_text_kit: ^4.2.3
 
 dev_dependencies:
   flutter_test:
