@@ -170,7 +170,23 @@ class _HomeState extends ConsumerState<Home> {
         );
       },
       loading: () => Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text("Error: $err")),
+      error: (err, stack) => Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Pallete.message, Pallete.message6],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Center(
+              child: Text("Please Use Internet",style: TextStyle(
+                  color: Pallete.message,
+                 fontSize: 33,
+                inherit: false
+              ),))
+      ),
     );
   }
 }
