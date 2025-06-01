@@ -7,7 +7,7 @@ import 'package:knowledge_app/totalscore.dart';
 
 final questionProvider = FutureProvider.autoDispose((ref) async {
   final response = await http.get(
-    Uri.parse("https://otpscreen-28454-default-rtdb.firebaseio.com/.json"),
+    Uri.parse("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
   );
   if (response.statusCode == 200) {
     return jsonDecode(response.body);
